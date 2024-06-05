@@ -1,37 +1,41 @@
-import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
-import { useFonts } from 'expo-font';
-import { Stack } from 'expo-router';
-import * as SplashScreen from 'expo-splash-screen';
-import { useEffect } from 'react';
-import 'react-native-reanimated';
-
-import { useColorScheme } from '@/hooks/useColorScheme';
-
-// Prevent the splash screen from auto-hiding before asset loading is complete.
-SplashScreen.preventAutoHideAsync();
+import { Stack } from "expo-router";
+import React, {useState} from "react";
+import {TaskContext, TaskContextType} from "./context/taskContext";
 
 export default function RootLayout() {
-  const colorScheme = useColorScheme();
-  const [loaded] = useFonts({
-    SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
-  });
+  const [arrayTask, setArrayTask] = useState<{id: string, name: string}[]>([]);
 
-  useEffect(() => {
-    if (loaded) {
-      SplashScreen.hideAsync();
-    }
-  }, [loaded]);
+  const setTask = (newTask: string) => {
+    setArrayTask(arrayTask => [...arrayTask, { id: Date.now().toString(), name: newTask }]);
+  };
 
-  if (!loaded) {
-    return null;
-  }
-
+  const deleteTask = (taskId: string) => {
+    console.log("deleteTask", taskId);
+    console.log("arrayTask", arrayTask);
+    
+    
+    setArrayTask(arrayTask => arrayTask.filter(task => task.id !== taskId));
+  };
+  const taskContextValue: TaskContextType = { arrayTask, setTask, deleteTask }
+  
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <Stack>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="+not-found" />
-      </Stack>
-    </ThemeProvider>
+      <TaskContext.Provider value={taskContextValue}>
+        <Stack
+        screenOptions={{
+          title: "Task Manager",
+          headerStyle: {
+            backgroundColor: "black",
+          },
+          headerTintColor: "white",
+          headerTitleStyle: {
+            fontWeight: "bold",
+          },
+        }
+        }
+        >
+          <Stack.Screen name="index" />
+        </Stack>
+      </TaskContext.Provider>
+
   );
 }
